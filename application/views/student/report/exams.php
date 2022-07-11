@@ -241,7 +241,7 @@ if (empty($exam_result)) {
 if (!empty($exam_result)) {
     ?>
                      <div class="dt-buttons btn-group pull-right miusDM40">
-                        <a class="btn btn-default btn-xs dt-button no_print" id="print" onclick="printDiv()"><i class="fa fa-print"></i></a>
+                        <a class="btn btn-default btn-xs dt-button no_print" id="print"  data-id="17"><i class="fa fa-print"></i></a>
                      </div>
                      <?php
 foreach ($exam_result as $exam_key => $exam_value) {
@@ -1009,6 +1009,31 @@ if ($consolidate_exam_result_percentage >= 60) {
 
 
 <script type="text/javascript">
+$(document).on('click', '#print', function () {
+            var print_btn=$(this);
+         var id = $(this).data('id');
+              
+                $.ajax({
+                    url: '<?php echo site_url("reportcard/print") ?>',
+                    type: 'post',
+                    data: {'data': id},
+                     beforeSend: function () {
+                print_btn.button('loading');
+            },
+                    success: function (response) {
+                        Popup(response);
+                    },
+                    error: function (xhr) { // if error occured
+                print_btn.button('reset');
+                errorMsg("<?php echo $this->lang->line('error_occured').", ".$this->lang->line('please_try_again')?>");
+
+            },
+            complete: function () {
+                print_btn.button('reset');
+            }
+                });
+            
+        });
 
     $(document).ready(function (e) {
 
@@ -1439,6 +1464,39 @@ if ($consolidate_exam_result_percentage >= 60) {
                                             }));
 
                                         });
+                         var base_url = '<?php echo base_url() ?>';
+
+    function Popup(data, winload = false)
+    {
+        var frame1 = $('<iframe />').attr("id", "printDiv");
+        frame1[0].name = "frame1";
+        frame1.css({"position": "absolute", "top": "-1000000px"});
+        $("body").append(frame1);
+        var frameDoc = frame1[0].contentWindow ? frame1[0].contentWindow : frame1[0].contentDocument.document ? frame1[0].contentDocument.document : frame1[0].contentDocument;
+        frameDoc.document.open();
+        //Create a new HTML document.
+        frameDoc.document.write('<html>');
+        frameDoc.document.write('<head>');
+        frameDoc.document.write('<title></title>');
+        frameDoc.document.write('<link rel="stylesheet" href="' + base_url + 'backend/bootstrap/css/bootstrap.min.css">');
+        frameDoc.document.write('</head>');
+        frameDoc.document.write('<body>');
+        frameDoc.document.write(data);
+        frameDoc.document.write('</body>');
+        frameDoc.document.write('</html>');
+        frameDoc.document.close();
+        setTimeout(function () {
+        document.getElementById('printDiv').contentWindow.focus();
+        document.getElementById('printDiv').contentWindow.print();
+        $("#printDiv", top.document).remove();
+            if (winload) {
+                window.location.reload(true);
+            }
+        }, 500);
+
+
+        return true;
+    }
 </script>
 
 <?php

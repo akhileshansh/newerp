@@ -174,6 +174,50 @@ class Reportcard extends Admin_Controller
         $this->load->view('layout/footer', $data);
     }
 
+     public function print()
+    {
+        $id=$_POST['data'];
+        if (!$this->rbac->hasPrivilege('student', 'can_view')) {
+            access_denied();
+        }
+         $this->session->set_userdata('top_menu', 'Examinations');
+        $this->session->set_userdata('sub_menu', 'Examinations/reportcard');
+        
+        $data['title']         = 'Student Details';
+        $student               = $this->student_model->get($id);
+        $gradeList             = $this->grade_model->get();
+        $studentSession        = $this->student_model->getStudentSession($id);
+        $timeline              = $this->timeline_model->getStudentTimeline($id, $status = '');
+        $data["timeline_list"] = $timeline;
+
+        $student_session_id = $studentSession["student_session_id"];
+
+        $student_session         = $studentSession["session"];
+        $data['sch_setting']     = $this->sch_setting_detail;
+        $data['adm_auto_insert'] = $this->sch_setting_detail->adm_auto_insert;
+        $current_student_session = $this->student_model->get_studentsession($student['student_session_id']);
+
+        $data["session"]              = $current_student_session["session"];
+       
+       $category_list          = $this->category_model->get();
+        $data['category_list']  = $category_list;
+        $data['gradeList']      = $gradeList;
+        $data['student']        = $student;
+        $class_section          = $this->student_model->getClassSection($student["class_id"]);
+        $data["class_section"]  = $class_section;
+        $session                = $this->setting_model->getCurrentSession();
+
+        $studentlistbysection         = $this->student_model->getStudentClassSection($student["class_id"], $session);
+        $data["studentlistbysection"] = $studentlistbysection;
+
+        $data['exam_result'] = $this->examgroupstudent_model->mergeStudentExams($student['student_session_id'], true, true);
+     //s   print_r($data['exam_result']);die();
+        $data['exam_grade']  = $this->grade_model->getGradeDetails();
+     
+        $this->load->view('student/report/reportprint', $data);
+        
+    }
+
     public function exportformat()
     {
         $this->load->helper('download');
